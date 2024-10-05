@@ -1,0 +1,4 @@
+---
+
+- name: Generate CA
+  include_tasks: generate_ca.yml

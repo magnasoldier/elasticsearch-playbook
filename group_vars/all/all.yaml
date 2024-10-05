@@ -1,0 +1,40 @@
+
+
+cluster_name: "elastic-cluster"
+base_domain: "elastic.example.com"
+
+elastic_version: "8.15.2"
+system_architecture: "linux-x86_64"
+
+
+### TLS ###
+# Default names for keys, certificates, truststore and keystore
+key_name: "{{ inventory_hostname }}-tls-key.pem"
+cert_name: "{{ inventory_hostname }}-tls-cert.pem"
+pkcs12_name: "{{ inventory_hostname }}-cert.p12"
+jks_name: "{{ inventory_hostname }}-keystore.jks"
+truststore_file: "truststore.jks"
+keystore_jks_name: "{{ inventory_hostname }}-keystore.jks"
+csr_name: "{{ inventory_hostname }}.csr"
+
+
+### CA settings ###
+# If you have your own CA or want to change default names for generated CA, you should manage settings below
+generate_ca: "true"
+ca_key_name: "ca-key.pem"
+ca_cert_name: "ca-cert.pem"
+
+# This is the directory where you CA stored
+local_cert_dir: "{{ playbook_dir }}/certs"
+
+
+
+elastic_path: "/opt/elasticsearch"
+certs_dir: "{{ elastic_path }}/config"
+
+
+elastic_user: "elasticsearch"
+elastic_group: "elasticsearch"
+
+
+extra_ip_sans: []

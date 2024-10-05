@@ -1,0 +1,131 @@
+---
+
+- name: Update package list and install required packages
+  apt:
+    update_cache: yes
+    name:
+      - wget
+      - "openjdk-{{ java_version }}-jdk"
+    state: present
+
+- name: Ensure Elastic user exists
+  user:
+    name: "{{ elastic_user }}"
+    comment: "Elastic service account"
+    shell: /bin/false
+    create_home: no
+    system: yes
+    state: present
+
+- name: Create Elastic directory
+  file:
+    state: directory
+    path: "{{ elastic_path }}"
+    mode: 0760
+    owner: "{{ elastic_user }}"
+    group: "{{ elastic_group }}"
+
+- name: Create lib directory
+  file:
+    path: "{{ elastic_lib_directory }}"
+    state: directory
+    owner: "{{ elastic_user }}"
+    group: "{{ elastic_group }}"
+    mode: 0774
+
+- name: Create lib directory
+  file:
+    path: "{{ elastic_log_directory }}"
+    state: directory
+    owner: "{{ elastic_user }}"
+    group: "{{ elastic_group }}"
+    mode: 0774
+
+- name: Download elastic archive
+  get_url:
+    url: "{{ elastic_url }}"
+    dest: "{{ elastic_path }}/{{ elastic_archive }}"
+
+- name: Unpack Elastic archive
+  unarchive:
+    src: "{{ elastic_path }}/{{ elastic_archive }}"
+    dest: "{{ elastic_path }}"
+    remote_src: yes
+    extra_opts: [ '--strip-components=1' ]
+
+#- name: Update package list and install required packages
+#  apt:
+#    update_cache: yes
+#    name:
+#      - wget
+#      - "openjdk-{{ java_version }}-jdk"
+#    state: present
+#
+#- name: Download Elastic GPG key
+#  get_url:
+#    url: "{{ gpg_url }}"
+#    dest: "{{ gpg_path }}"
+#
+#- name: Add Elastic GPG key
+#  apt_key:
+#    file: "{{ gpg_path }}"
+#    state: present
+#
+#- name: Add Elastic repository
+#  apt_repository:
+#    repo: "deb [arch=amd64] {{ elastic_repository }} stable main"
+#    state: present
+#    filename: elastic
+#    update_cache: yes
+#
+#- name: Install elastic
+#  apt:
+#    name: elasticsearch
+#    update_cache: yes
+#    state: present
+
+- name: Create certificates directory
+  file:
+    path: "{{ certs_dir }}"
+    owner: elasticsearch
+    group: elasticsearch
+    mode: 0770
+    state: directory
+
+- name: Remove old configuration
+  file:
+    path: "{{ elastic_config_path }}"
+    state: absent
+
+- name: Generate elastic config from template
+  template:
+    src: elasticsearch.yml.j2
+    dest: "{{ elastic_config_path }}"
+    owner: elasticsearch
+    group: elasticsearch
+    mode: 0774
+
+- name: Generate elastic service file
+  template:
+    src: elasticsearch.service.j2
+    dest: "/etc/systemd/system/elasticsearch.service"
+
+
+- name: Create new keystore
+  shell: |
+    {{ elastic_keystore_path }} create
+  args:
+    executable: /bin/bash
+    creates: "{{ elastic_keystore_file }}"
+
+- name: Add passwords to Elasticsearch keystore
+  shell: |
+    echo -n "{{ cert_password }}" | {{ elastic_keystore_path }} add {{ item.key }} --stdin --force
+  loop:
+    - { key: "xpack.security.http.ssl.keystore.secure_password" }
+    - { key: "xpack.security.transport.ssl.keystore.secure_password" }
+    - { key: "xpack.security.http.ssl.truststore.secure_password" }
+    - { key: "xpack.security.transport.ssl.truststore.secure_password" }
+  args:
+    executable: /bin/bash
+

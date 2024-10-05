@@ -1,0 +1,85 @@
+---
+
+- name: Generate private key for each node
+  openssl_privatekey:
+    passphrase: "{{ cert_password }}"
+    path: "{{ certs_dir }}/{{ key_name }}"
+    size: 2048
+    owner: "{{ elastic_user }}"
+    group: "{{ elastic_group }}"
+
+- name: Copy SAN config to nodes
+  template:
+    src: "san.cfg.j2"
+    dest: "{{ certs_dir }}/san.cfg"
+    mode: 0640
+    owner: "{{ elastic_user }}"
+    group: "{{ elastic_group }}"
+
+- name: Generate CSR
+  command: >
+    openssl req -new 
+    -config "{{ certs_dir }}/san.cfg"
+    -key "{{ certs_dir }}/{{ key_name }}"
+    -out "{{ certs_dir }}/{{ inventory_hostname }}.csr"
+    -passin pass:{{ cert_password }}
+    -subj "/C=US/ST=California/L=San Francisco/O=MyOrganization/OU=IT Department/CN={{ inventory_hostname }}.{{ base_domain }}"
+    -addext "subjectAltName=DNS:{{ inventory_hostname }}.{{ base_domain }},IP:{{ ansible_host | trim }}"
+  args:
+    creates: "{{ certs_dir }}/{{ inventory_hostname }}.csr"
+
+- name: Generate certificate
+  command: >
+    openssl x509 -req -in "{{ certs_dir }}/{{ inventory_hostname }}.csr" 
+    -CA "{{ certs_dir }}/{{ ca_cert_name }}" -CAkey "{{ certs_dir }}/{{ ca_key_name }}"
+    -CAcreateserial -out "{{ certs_dir }}/{{ cert_name }}" 
+    -days 365 -sha256
+    -extfile "{{ certs_dir }}/san.cfg"
+    -extensions v3_ca
+  args:
+    creates: "{{ certs_dir }}/{{ cert_name }}"
+
+- name: Generate PKCS storage
+  command: >
+    openssl pkcs12
+    -export -out "{{ certs_dir }}/{{ inventory_hostname }}.p12"
+    -inkey "{{ certs_dir }}/{{ key_name }}"
+    -in "{{ certs_dir }}/{{ cert_name }}"
+    -certfile "{{ certs_dir }}/{{ ca_cert_name }}"
+    -passin pass:{{ cert_password }}
+    -passout pass:{{ cert_password }}
+  args:
+    creates: "{{ certs_dir }}/{{ inventory_hostname }}.p12"
+
+- name: Add CA to Truststore
+  command: >
+    keytool -import
+    -alias your-ca
+    -file "{{ certs_dir }}/{{ ca_cert_name }}"
+    -keystore "{{ certs_dir }}/{{ truststore_file }}"
+    -storepass "{{ cert_password }}"
+    -noprompt
+  args:
+    creates: "{{ certs_dir }}/{{ truststore_file }}"
+
+- name: Grant privileges to elastic user for PKCS
+  file:
+    path: "{{ certs_dir }}/{{ inventory_hostname }}.p12"
+    owner: "{{ elastic_user }}"
+    group: "{{ elastic_group }}"
+    mode: 0640
+
+- name: Grant privileges to elastic for truststore
+  file:
+    path: "{{ certs_dir }}/{{ truststore_file }}"
+    owner: "{{ elastic_user }}"
+    group: "{{ elastic_group }}"
+    mode: 0640
+
+- name: Grant all privileges for certs to elastic
+  file:
+    path: "{{ certs_dir }}"
+    recurse: true
+    owner: "{{ elastic_user }}"
+    group: "{{ elastic_group }}"
+    mode: 0770

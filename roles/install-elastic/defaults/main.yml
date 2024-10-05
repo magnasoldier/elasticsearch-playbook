@@ -1,0 +1,22 @@
+---
+
+gpg_url: "https://artifacts.elastic.co/GPG-KEY-elasticsearch"
+gpg_path: "/tmp/elastic.gpg"
+elastic_repository: "https://artifacts.elastic.co/packages/8.x/apt"
+java_version: 11
+
+elastic_keystore_path: "{{ elastic_path }}/bin/elasticsearch-keystore"
+elastic_setup_passwords_path: "{{ elastic_path }}/bin/elasticsearch-setup-passwords"
+elastic_keystore_file: "{{ elastic_path }}/config/elasticsearch.keystore"
+elastic_lib_directory: "/var/lib/elasticsearch"
+elastic_log_directory: "/var/log/elasticsearch"
+
+
+elastic_archive: "elastic.tar.gz"
+elastic_url: "https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-{{ elastic_version }}-{{ system_architecture }}.tar.gz"
+
+elastic_config_path: "{{ elastic_path }}/config/elasticsearch.yml"
+
+elastic_user: "elasticsearch"
+elastic_group: "elasticsearch"
+

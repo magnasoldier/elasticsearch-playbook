@@ -1,0 +1,31 @@
+---
+
+- name: Grant all privileges to elastic users
+  file:
+    recurse: true
+    path: "{{ elastic_path }}"
+    owner: "{{ elastic_user }}"
+    group: "{{ elastic_group }}"
+    mode: 0774
+
+- name: Start elastic cluster
+  systemd:
+    daemon_reload: true
+    name: elasticsearch
+    state: restarted
+
+- name: Configure elastic users
+  shell: |
+    {{ elastic_setup_passwords_path }} auto -b
+  register: elastic_users
+  args:
+    executable: /bin/bash
+  retries: 5
+  delay: 10
+  until: elastic_users.rc == 0
+  ignore_errors: yes
+  when: inventory_hostname in groups['master'][0]
+
+- name: Check output
+  debug:
+    msg: "{{ elastic_users.stdout }}"

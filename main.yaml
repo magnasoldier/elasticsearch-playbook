@@ -1,0 +1,14 @@
+---
+
+- name: CA generation
+  hosts: all
+  roles:
+    - certs-generation
+
+- name: Elasticsearch cluster
+  become: true
+  vars_prompt:
+    - name: cert_password
+  hosts: all
+  roles:
+    - install-elastic
