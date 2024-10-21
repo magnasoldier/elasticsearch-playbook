@@ -5,6 +5,8 @@
     update_cache: yes
     name:
       - wget
+      - openssl
+      - python3-cryptography
       - "openjdk-{{ java_version }}-jdk"
     state: present
 
@@ -110,7 +112,6 @@
     src: elasticsearch.service.j2
     dest: "/etc/systemd/system/elasticsearch.service"
 
-
 - name: Create new keystore
   shell: |
     {{ elastic_keystore_path }} create
@@ -129,3 +130,9 @@
   args:
     executable: /bin/bash
 
+- name: vm.max_map_count set
+  ansible.builtin.sysctl:
+    name: vm.max_map_count
+    value: "{{ vm_max_map_count }}"
+    state: present
+    reload: true

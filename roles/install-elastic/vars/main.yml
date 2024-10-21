@@ -2,3 +2,7 @@
 
 truststore_file: "truststore.jks"
 local_passwords_path: "{{ local_passwords_dir }}/elastic_passwords.txt"
+
+
+# Minimum value. Less values are not allowed.
+vm_max_map_count: "262144"
