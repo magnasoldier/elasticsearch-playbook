@@ -30,11 +30,11 @@ node.name: {{ inventory_hostname }}
 #
 # Path to directory where to store the data (separate multiple locations by comma):
 #
-path.data: /var/lib/elasticsearch
+path.data: {{ elastic_lib_directory }}
 #
 # Path to log files:
 #
-path.logs: /var/log/elasticsearch
+path.logs: {{ elastic_log_directory }}
 #
 # ----------------------------------- Memory -----------------------------------
 #
@@ -89,14 +89,8 @@ cluster.initial_master_nodes: {{ list_of_hostnames | to_json }}
 #
 # Allow wildcard deletion of indices:
 #
-#action.destructive_requires_name: false
+# action.destructive_requires_name: false
 
-#----------------------- BEGIN SECURITY AUTO CONFIGURATION -----------------------
-#
-# The following settings, TLS certificates, and keys have been automatically
-# generated to configure Elasticsearch security features on 23-09-2024 07:47:43
-#
-# --------------------------------------------------------------------------------
 
 # Enable security features
 xpack.security.enabled: true
@@ -145,4 +139,8 @@ node.roles: {{ roles | to_json }}
 
 xpack.security.autoconfiguration.enabled: true
 
-#----------------------- END SECURITY AUTO CONFIGURATION -------------------------
+
+{% include 'extra_configs.yml.j2' %}
+
+
+

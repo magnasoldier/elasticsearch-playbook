@@ -29,3 +29,25 @@
 - name: Check output
   debug:
     msg: "{{ elastic_users.stdout }}"
+
+- name: Create directory for elasticsearch passwords
+  file:
+    state: directory
+    path: "{{ local_passwords_dir }}"
+  delegate_to: localhost
+  run_once: true
+
+- name: Save elasticsearch default passwords
+  copy:
+    content: "{{ elastic_users.stdout }}"
+    dest: "{{ local_passwords_path }}"
+  delegate_to: localhost
+  run_once: true
+
+- name: Save passwords
+  command:
+    cmd: >
+      ansible-vault encrypt {{ local_passwords_path }}
+  delegate_to: localhost
+  run_once: true
+

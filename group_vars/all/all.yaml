@@ -38,3 +38,6 @@ elastic_group: "elasticsearch"
 
 
 extra_ip_sans: []
+
+
+local_passwords_dir: "{{ playbook_dir }}/secrets"

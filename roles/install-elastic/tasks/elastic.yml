@@ -33,7 +33,7 @@
     group: "{{ elastic_group }}"
     mode: 0774
 
-- name: Create lib directory
+- name: Create log directory
   file:
     path: "{{ elastic_log_directory }}"
     state: directory

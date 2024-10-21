@@ -3,7 +3,8 @@
 - name: CA generation
   hosts: all
   roles:
-    - certs-generation
+    - role: certs-generation
+      when: generate_ca == "true"
 
 - name: Elasticsearch cluster
   become: true

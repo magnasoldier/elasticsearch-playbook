@@ -1,3 +1,4 @@
 ---
 
 truststore_file: "truststore.jks"
+local_passwords_path: "{{ local_passwords_dir }}/elastic_passwords.txt"

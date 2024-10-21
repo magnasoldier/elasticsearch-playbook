@@ -83,3 +83,8 @@
     owner: "{{ elastic_user }}"
     group: "{{ elastic_group }}"
     mode: 0770
+
+- name: Remove CA key from nodes
+  file:
+    path: "{{ certs_dir }}/{{ ca_key_name }}"
+    state: absent
